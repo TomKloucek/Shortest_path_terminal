@@ -45,11 +45,10 @@ std::vector<std::pair<std::string,int>> dijkstra(const std::vector<std::pair<std
                 if (val.first == vertex.second) {
                     for (const auto& neighbour : val.second) {
                         int al = paths[get_index_of_vertex(paths,vertex.second)].second + get_edge_size(graph, vertex.second, neighbour.first);
-                        std::cout << "path:" << paths[get_index_of_vertex(paths,vertex.second)].second << " " << get_edge_size(graph, vertex.second, neighbour.first) << "\n";
                         if (al < paths[get_index_of_vertex(paths,neighbour.first)].second) {
                             paths[get_index_of_vertex(paths,neighbour.first)].second = al;
                             previous_node[get_index_of_vertex(paths,neighbour.first)].second = vertex.second;
-                            togo.push({neighbour.second,neighbour.first});
+                            togo.emplace(neighbour.second, neighbour.first);
                         }
                     }
                 }

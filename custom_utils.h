@@ -124,8 +124,23 @@ bool all_vertex_names_used_once(const std::vector<std::pair<std::string,std::vec
     return check_set.size() == graph.size();
 }
 
+bool contains_not_existing_edges(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph) {
+    std::set<std::string> check_set;
+    for (const auto& vertex : graph) {
+        check_set.insert(vertex.first);
+    }
+    for (auto const& vertex : graph) {
+        for (auto const& neighbour : vertex.second) {
+            if (check_set.find(neighbour.first) != check_set.end()) {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
 bool computing_path_possible(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph) {
-    return all_vertex_names_used_once(graph);
+    return all_vertex_names_used_once(graph) && !contains_not_existing_edges(graph);
 }
 
 void print_path(const std::vector<std::pair<std::string,int>>& path, const std::string& starting_vertex) {
@@ -162,12 +177,29 @@ bool check_if_starting_vertex_exists(const std::vector<std::pair<std::string,std
     return std::any_of(graph.begin(), graph.end(), [source](auto vertex) { return vertex.first == source;});
 }
 
-void write_results_to_file(const std::vector<std::pair<std::string,int>>& path, const std::string& starting_vertex, const std::string& filename, const std::string& algorithm, bool measured=false,int millisecond_took=0) {
-    std::ofstream file;
-    file.open (filename);
-    file << "This results were calculated using: " << algorithm << " algorithm\n";
+void prepare_file_to_appending(const std::string& filename,  const std::string& algorithm, bool measured=false,int millisecond_took=0) {
+    std::ofstream ofs;
+    ofs.open(filename, std::ofstream::out | std::ofstream::trunc);
+    ofs.close();
+    ofs.open(filename);
+    ofs << "This results were calculated using: " << algorithm << " algorithm\n";
     if (measured) {
-        file << "Computations needed: " << millisecond_took << "ms to finish\n";
+        ofs << "Computations needed: " << millisecond_took << "ms to finish\n\n";
+    }
+}
+
+void write_results_to_file(const std::vector<std::pair<std::string,int>>& path, const std::string& starting_vertex, const std::string& filename, const std::string& algorithm,bool append, bool measured=false,int millisecond_took=0) {
+    std::ofstream file;
+    if (append) {
+        file.open(filename,std::ios_base::app);
+    } else {
+        file.open(filename);
+    }
+    if (!append) {
+        file << "This results were calculated using: " << algorithm << " algorithm\n";
+        if (measured) {
+            file << "Computations needed: " << millisecond_took << "ms to finish\n";
+        }
     }
     file << "Path for vertex: " << starting_vertex << "\n";
     for (const auto& vertex : path) {
