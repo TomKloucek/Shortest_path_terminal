@@ -10,7 +10,10 @@ std::chrono::milliseconds to_ms(TimePoint tp) {
 
 int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,char *algorithm,const char * start_vertex, const char * result_filename, bool measure_time) {
     auto graph = prepare_file_for_graph(file);
-    std::vector<std::pair<std::basic_string<char>, int>> paths;
+    if (graph.empty()) {
+        return -1;
+    }
+    std::pair<std::vector<std::pair<std::string,int>>,std::vector<std::pair<std::string,std::vector<std::string>>>> paths;
     if (cmd_option_exists(argv, argv+argc, "-a")) {
         if (std::strcmp(algorithm, "D") == 0) {
             if (computing_path_possible(graph)) {
@@ -28,7 +31,7 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
                 else {
                     paths = dijkstra(graph, start_vertex);
                 }
-                if (paths.empty()) {
+                if (paths.first.empty()) {
                     return -1;
                 } else {
                     if (write_result_to_file) {
@@ -38,7 +41,6 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
                     return 1;
                 }
             } else {
-                std::cerr << "provided graph does not meet one of the following rules: all vertex names can be used only once" << std::endl;
                 return -1;
             }
         } else if (std::strcmp(algorithm, "B") == 0) {
@@ -47,15 +49,14 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
                     std::cerr << "provided vertex does not exists in graph" << std::endl;
                     return -1;
                 }
-                paths = bellman_ford(graph, start_vertex);
-                if (paths.empty()) {
+                //paths = bellman_ford(graph, start_vertex);
+                if (paths.first.empty()) {
                     return -1;
                 } else {
-                    print_path(paths, start_vertex);
+                    //print_path(paths.first, start_vertex);
                     return 0;
                 }
             } else {
-                std::cerr << "provided graph does not meet one of the following rules: all vertex names can be used only once" << std::endl;
                 return -1;
             }
         } else {
@@ -70,16 +71,23 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
 
 int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int argc, char **argv,char *algorithm,const char * start_vertex, const char * result_filename, bool measure_time) {
     auto graph = prepare_file_for_graph(file);
-    std::vector<std::vector<std::pair<std::basic_string<char>, int>>> path_set;
+    if (graph.empty()) {
+        return -1;
+    }
+    std::vector<std::pair<std::vector<std::pair<std::string,int>>,std::vector<std::pair<std::string,std::vector<std::string>>>>> path_set;
     std::vector<std::pair<std::basic_string<char>, int>> paths;
     if (cmd_option_exists(argv, argv+argc, "-a")) {
         if (std::strcmp(algorithm, "D") == 0) {
             if (computing_path_possible(graph)) {
+                if (!dijkstra_possible(graph)) {
+                    std::cerr << "dijkstra algorithm cannot be applied on this graph" << std::endl;
+                    return -1;
+                }
                 std::chrono::milliseconds measured_time;
                 if (measure_time) {
                     auto start = std::chrono::high_resolution_clock::now();
                     for (auto const& vertex : graph) {
-                        path_set.emplace_back(dijkstra(graph, vertex.first));
+                        path_set.push_back(dijkstra(graph, vertex.first));
                     }
                     auto end = std::chrono::high_resolution_clock::now();
                     measured_time = to_ms(end - start);
@@ -92,17 +100,21 @@ int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int a
                     return -1;
                 } else {
                     int counter = 0;
-                    prepare_file_to_appending(result_filename, "Dijkstra", measure_time, measured_time.count());
-                    for (auto const& path : path_set) {
+                    if (write_result_to_file) {
+                        prepare_file_to_appending(result_filename, "Dijkstra", measure_time, measured_time.count());
+                    }
+                    for (auto path : path_set) {
                         print_path(path, graph[counter].first);
-                        write_results_to_file(path, graph[counter].first, result_filename, "Dijkstra",true,measure_time,measured_time.count());
+                        if (write_result_to_file) {
+                            write_results_to_file(path, graph[counter].first, result_filename, "Dijkstra", true,
+                                                  measure_time, measured_time.count());
+                        }
                         std::cout << "\n";
                         counter++;
                     }
                     return 1;
                 }
             } else {
-                std::cerr << "provided graph does not meet one of the following rules: { all vertex names can be used only once, edge must not end in not existing vertex }" << std::endl;
                 return -1;
             }
         } else if (std::strcmp(algorithm, "B") == 0) {
@@ -115,11 +127,10 @@ int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int a
                 if (paths.empty()) {
                     return -1;
                 } else {
-                    print_path(paths, start_vertex);
+                    //print_path(paths, start_vertex);
                     return 0;
                 }
             } else {
-                std::cerr << "provided graph does not meet one of the following rules: all vertex names can be used only once" << std::endl;
                 return -1;
             }
         } else {
@@ -133,7 +144,10 @@ int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int a
 }
 
 int main(int argc, char **argv) {
-
+    if (!parameters_are_right(argv,argc)) {
+        std::cerr << "parameters of the program contains unsupported flags" << std::endl;
+        return -1;
+    }
     if(cmd_option_exists(argv, argv+argc, "--help"))
     {
         if (std::strcmp(argv[1],"--help") == 0) {
@@ -158,10 +172,10 @@ int main(int argc, char **argv) {
         return 0;
     }
 
-    char * filename = get_cmd_option(argv, argv + argc, "-f");
-    char * start_vertex = get_cmd_option(argv, argv + argc, "-s");
+    char const * filename = get_cmd_option(argv, argv + argc, "-f");
+    char const * start_vertex = get_cmd_option(argv, argv + argc, "-s");
     char *algorithm;
-    char * result_filename;
+    char const * result_filename;
     bool write_result_to_file = false;
     bool measure_time = false;
     if (cmd_option_exists(argv, argv+argc, "-a")) {
@@ -174,8 +188,6 @@ int main(int argc, char **argv) {
     if (cmd_option_exists(argv, argv+argc, "-t")) {
         measure_time = true;
     }
-
-
 
     if (filename)
     {

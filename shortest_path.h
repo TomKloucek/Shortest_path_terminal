@@ -5,36 +5,43 @@
 #include <sstream>
 #include "custom_utils.h"
 #include <queue>
-/*
- * for each vertex v in Graph.Vertices:
- 4          dist[v] ← INFINITY
- 5          prev[v] ← UNDEFINED
- 6          add v to Q
- 7      dist[source] ← 0
- 8
- 9      while Q is not empty:
-10          u ← vertex in Q with min dist[u]
-11          remove u from Q
-12
-13          for each neighbor v of u still in Q:
-14              alt ← dist[u] + Graph.Edges(u, v)
-15              if alt < dist[v]:
-16                  dist[v] ← alt
-17                  prev[v] ← u
-18
- * */
+#include <map>
 
-std::vector<std::pair<std::string,int>> dijkstra(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph, std::string starting_vertex) {
+
+std::vector<std::pair<std::string,std::vector<std::string>>> get_paths(const std::vector<std::pair<std::string,std::string>> &previous_node, const std::string &starting_vertex) {
+    std::vector<std::pair<std::string,std::vector<std::string>>> paths;
+    for (const auto& vertex : previous_node) {
+        if (vertex.first == starting_vertex) {
+            paths.push_back({vertex.first, {}});
+        }else {
+            std::vector<std::string> path;
+            auto current = vertex.second;
+            while (current != starting_vertex) {
+                for (auto const &value: previous_node) {
+                    if (value.first == current) {
+                        path.emplace_back(current);
+                        current = value.second;
+                        break;
+                    }
+                }
+            }
+            path.push_back(current);
+            paths.emplace_back(vertex.first, path);
+        }
+    }
+    return paths;
+}
+
+std::pair<std::vector<std::pair<std::string,int>>,std::vector<std::pair<std::string,std::vector<std::string>>>> dijkstra(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph,const std::string &starting_vertex) {
     if (dijkstra_possible(graph)) {
         auto togo = std::priority_queue<std::pair<int, std::string>, std::vector<std::pair<int, std::string>>, std::greater<>>();
-        std::vector<std::string> visited;
         std::vector<std::pair<std::string,int>> paths = fill_paths(graph);
         std::vector<std::pair<std::string,std::string>> previous_node = fill_previous_nodes(graph);
 
         for (auto & path : paths) {
             if (path.first == starting_vertex) {
                 path.second = 0;
-                togo.push({path.second,path.first});
+                togo.emplace(path.second, path.first);
             }
         }
 
@@ -54,14 +61,16 @@ std::vector<std::pair<std::string,int>> dijkstra(const std::vector<std::pair<std
                 }
             }
         }
-        return paths;
+
+        return {paths,get_paths(previous_node, starting_vertex)};
     } else {
         std::cerr << "dijkstra algorithm cannot be applied on this graph" << std::endl;
         return {};
     }
 }
 
-std::vector<std::pair<std::string,int>> bellman_ford(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph, std::string starting_vertex) {
+
+std::vector<std::pair<std::string,int>> bellman_ford(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph, const std::string &starting_vertex) {
     if (bellman_ford_possible(graph)) {
         return {};
     } else {
