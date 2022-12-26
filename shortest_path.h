@@ -3,7 +3,7 @@
 #include <fstream>
 #include <vector>
 #include <sstream>
-#include "custom_utils.h"
+#include "utilities.h"
 #include <queue>
 #include <map>
 
@@ -82,7 +82,7 @@ std::vector<std::pair<int, std::pair<std::string, std::string>>> get_all_edges(c
     return edges;
 }
 
-int get_edge_distance(std::vector<std::pair<std::string,int>> distances, std::string from) {
+int get_edge_distance(const std::vector<std::pair<std::string,int>> &distances, const std::string &from) {
     for (auto const& vertex : distances) {
         if (vertex.first == from) {
             return vertex.second;

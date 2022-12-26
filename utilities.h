@@ -76,18 +76,6 @@ std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>> prep
     return graph;
 }
 
-void print_graph(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph) {
-    for (const auto& vertex : graph) {
-        std::string neighbours;
-        for (const auto& neighbour : vertex.second) {
-            neighbours += "("+neighbour.first+":"+std::to_string(neighbour.second)+"),";
-        }
-        neighbours.pop_back();
-        std::cout << vertex.first << " -> " << neighbours << "\n";
-    }
-    std::cout << std::endl;
-}
-
 bool dijkstra_possible(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph) {
     for (const auto& vertex : graph) {
         std::string neighbours;
