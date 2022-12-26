@@ -113,7 +113,6 @@ bool graph_is_undirected(const std::vector<std::pair<std::string,std::vector<std
                     }
                 }
                 if (!found) {
-                    std::cout << target;
                     return false;
                 }
             }
@@ -130,7 +129,7 @@ bool bellman_ford_possible(const std::vector<std::pair<std::string,std::vector<s
 std::vector<std::pair<std::string,int>> fill_paths(const std::vector<std::pair<std::string,std::vector<std::pair<std::string,int>>>>& graph) {
     std::vector<std::pair<std::string,int>> paths;
     for (const auto& vertex : graph) {
-        paths.emplace_back(vertex.first, INT32_MAX);
+        paths.emplace_back(vertex.first, std::numeric_limits<int>::max());
     }
     return paths;
 }
@@ -220,6 +219,11 @@ void print_path(std::pair<std::vector<std::pair<std::string,int>>,std::vector<st
         std::cout << path_string << "\n";
     }
     std::cout << std::endl;
+}
+
+void write_time_info(const std::string& algorithm, int millisecond_took=0) {
+    std::cout << "This results were calculated using: " << algorithm << " algorithm\n";
+    std::cout << "Computations needed: " << millisecond_took << " ms to finish\n\n";
 }
 
 int get_index_of_vertex(const std::vector<std::pair<std::string,int>>& path, const std::string& vertex) {
