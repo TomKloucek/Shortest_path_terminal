@@ -1,8 +1,8 @@
 #include "shortest_path.h"
 
 template <typename TimePoint>
-std::chrono::milliseconds to_ms(TimePoint tp) {
-    return std::chrono::duration_cast<std::chrono::milliseconds>(tp);
+std::chrono::microseconds to_ms(TimePoint tp) {
+    return std::chrono::duration_cast<std::chrono::microseconds>(tp);
 }
 
 int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,char *algorithm,const char * start_vertex, const char * result_filename, bool measure_time) {
@@ -18,7 +18,7 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
                     std::cerr << "provided vertex does not exists in graph" << std::endl;
                     return -1;
                 }
-                std::chrono::milliseconds measured_time;
+                std::chrono::microseconds measured_time;
                 if (measure_time) {
                     auto start = std::chrono::high_resolution_clock::now();
                     paths = dijkstra(graph, start_vertex);
@@ -52,7 +52,7 @@ int execute(std::ifstream &file,bool write_result_to_file,int argc, char **argv,
                     std::cerr << "provided vertex does not exists in graph" << std::endl;
                     return -1;
                 }
-                std::chrono::milliseconds measured_time;
+                std::chrono::microseconds measured_time;
                 if (measure_time) {
                     auto start = std::chrono::high_resolution_clock::now();
                     paths = bellman_ford(graph, start_vertex);
@@ -104,7 +104,7 @@ int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int a
                     std::cerr << "dijkstra algorithm cannot be applied on this graph" << std::endl;
                     return -1;
                 }
-                std::chrono::milliseconds measured_time;
+                std::chrono::microseconds measured_time;
                 if (measure_time) {
                     auto start = std::chrono::high_resolution_clock::now();
                     for (auto const& vertex : graph) {
@@ -150,7 +150,7 @@ int execute_for_all_vertexes(std::ifstream &file,bool write_result_to_file,int a
                     std::cerr << "bellman-ford algorithm cannot be applied on this graph" << std::endl;
                     return -1;
                 }
-                std::chrono::milliseconds measured_time;
+                std::chrono::microseconds measured_time;
                 try {
                     if (measure_time) {
                         auto start = std::chrono::high_resolution_clock::now();
